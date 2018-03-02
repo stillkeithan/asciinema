@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>PBIS Rewards</title>
+        <meta charset="UTF-8">
+        <meta name="format-detection" content="" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://student.pbisrewards.com/js/environment.js?1520023784"></script>
+        <script src="https://student.pbisrewards.com/js/jquery-1.11.1.min.js"></script>
+        <LINK REL="StyleSheet" HREF="https://student.pbisrewards.com/js/themes/blue/style.css" TYPE="text/css"  />
+         <link href="https://student.pbisrewards.com/js/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+         <link href="https://student.pbisrewards.com/js/bootstrap/css/material-wfont.min.css" rel="stylesheet">
+         <link href="https://student.pbisrewards.com/js/jquerycolorpicker/css/bootstrap-colorpicker.css" rel="stylesheet">
+          <link href="https://student.pbisrewards.com/js/jcrop/css/jquery.Jcrop.min.css" rel="stylesheet">
+         <link href="https://student.pbisrewards.com/css/datepicker.css" rel="stylesheet">
+         <script src="https://student.pbisrewards.com/js/bootstrap-datepicker.js"></script>
+         <script src="https://student.pbisrewards.com/js/Chart.js/Chart.js"></script>
+         <script src="https://student.pbisrewards.com/js/Chart.js/Chart.StackedBar.js"></script>
+         <script src="https://student.pbisrewards.com/js/Chart.js/Chart.HorizontalBar.js"></script>
+          <link href="https://student.pbisrewards.com/css/ltstyle.css?1520023784" rel="stylesheet">
+          <link href="https://student.pbisrewards.com/css/fa/font-awesome.min.css" rel="stylesheet">
+          <script src="https://student.pbisrewards.com/js/pwstrength/pwstrength.js"></script>
+          <script src="https://student.pbisrewards.com/js/floatingtableheader.js"></script>
+          <script src="https://student.pbisrewards.com/js/html2canvas.js"></script>
+          <script src="https://student.pbisrewards.com/js/jquerycolorpicker/js/bootstrap-colorpicker.min.js"></script>
+          <script src="https://student.pbisrewards.com/js/tinymce/tinymce.min.js"></script>
+                               <script type="text/javascript">
+                      var jcrop_api = '';  
+             
+var flashflag = null;
+
+         var sockserver = {};
+           
+            var students_to_star = {};
+        sockserver.connect = function()  {
+            var ws = new WebSocket(socket_server);
+            ws.onopen = function() {
+                //console.log('ws connected');
+                //$('#sockettest').html('ws connected');
+              //  $('#response').append('Received error: ' + JSON.stringify(msgevent) + '<br/>'); 
+                sockserver.ws = ws;
+                var datapacket = {From: 'web',GID: '',UID:'',SID:''};
+                sockserver.send(datapacket);//primming send
+                setInterval(function(){ sockserver.send(datapacket);  },2000);
+            };
+            ws.onerror = function(msgevent) {
+                //console.log('ws error');
+              //  $('#response').append('Received error: ' + JSON.stringify(msgevent) + '<br/>'); 
+            };
+            ws.onclose = function(msgevent) {
+               // console.log('ws closed');
+              // $('#response').append('Received close: ' + JSON.stringify(msgevent) + '<br/>'); 
+            };
+            ws.onmessage = function(msgevent) {
+                //$('#response').append('Received message: ' + JSON.stringify(msgevent) + '<br/>'); 
+                var msg = JSON.parse(msgevent.data);
+                var studentslist = msg[1]["StudentsToReload"];//this is an object containing objects not an array, but kind of an array
+                //Should Receive 
+                //Check for unread messages
+                var curmessagecnt = $('#desktop_badge_message').html();
+                if (curmessagecnt != ''){
+                    if(parseInt(msg[2].hasunread) != parseInt(curmessagecnt)){
+                                            }
+                }
+                
+                // message received, do something
+                if(msg[0].isdown === true){
+                   window.location = 'sitedown.html';
+                }
+                //If I am on a group page and I receive an update to my group, reload the group. 
+                if (true == false){
+                    //console.log(JSON.stringify(Object.prototype.toString.call(msg[1].StudentsToReload)));
+                    if (Object.keys(studentslist).length > 0){
+                        order = (order == '' || order == undefined) ? 'lnfn' : order;
+                        PopulateStudentList(studentslist,studentslist[0]["Points"],'',order);
+                        $('#sound_ding')[0].play();
+                    }
+                }
+                //check something and rerun the message check. 
+                //
+                
+                
+            };
+        };
+
+        
+            sockserver.send = function(msg) {
+                if (!this.ws) {
+                    //console.log('no connection');
+                    //$('#sockettest').html('connection closed ');
+                    return;
+                }
+                this.ws.send(window.JSON.stringify(msg));
+            };
+            
+            sockserver.close = function(msg) {
+                if (!this.ws) {
+                    //console.log('no connection');
+                    //$('#sockettest').html('connection closed ');
+                    return;
+                }
+                this.ws.close();
+            };
+            
+            
+            sockserver.reload = function() {
+                var datapacket = {From: 'web',GID: '',ReloadGroup:true};
+                sockserver.send(datapacket);//primming send
+            };
+            
+            
+            
+
+         
+         
+         
+//        function send( text ) {
+//                Server.send( 'message',text);   
+//        }
+  
+
+
+
+        $(function() {
+            localStorage.setItem("emergencyclosed","False");
+            if (localStorage.getItem("emergencyclosed") !== "True"){
+            //    $("#emergency_message").slideDown("slow");
+            }
+            
+//            if(window.location != 'mygroups.php'){$('input:enabled:visible:first').focus();}
+            var myURI = 'student.php';
+            if (myURI != 'mygroups.php'){$('input:enabled:visible:first').focus();}
+                      
+            //console.log("Date: " + new Date());
+            $(".floating_back2").hide();
+           // doPoll();
+            
+                    
+            sockserver.connect();
+                         window.onbeforeunload = function() {
+                sockserver.onclose = function () {}; // disable onclose handler first
+                sockserver.close();
+            };
+                       ActivateFloatingHeaders("table.tableWithFloatingHeader");
+            
+            "use strict";
+    var options = {};
+    options.ui = {
+        container: "#pwd-container",
+        showVerdictsInsideProgressBar: false,
+        viewports: {
+            progress: ".pwstrength_viewport_progress",
+            verdict: ".pwstrength_viewport_verdict"
+        }
+    };
+    options.common = {
+        onKeyUp: function (evt, data) {
+            $('#passwordscore').val(Math.round(data.score));
+            //$(".pwstrength_viewport_verdict_score").text(Math.round(data.score * 100) / 100);
+        }
+        //zxcvbn: true,
+        //userInputs: ['#UserUserName']
+    };//zxcvbnTerms: ['samurai', 'shogun', 'bushido', 'daisho', 'seppuku'],
+    $('#UserPass').pwstrength(options);
+            
+            setTimeout(function() { $("#info_message").slideUp(1500); }, 5000);
+            $('.alert').css('display','none');
+            $('.modal').css('display','none');
+            //$('.modal').hide();
+//            $('#UserPhotoDisplay').Jcrop({ aspectRatio: 1/1,onChange: preview,onSelect: preview,bgFade: true,bgOpacity: .3,setSelect: [ 60, 70, 350, 300 ], boxWidth: ($(window).width()-60), boxHeight: ($(window).height()-60)},function(){
+//                jcrop_api = this;
+//            });
+//            $('#UserPhotoDisplay').Jcrop({
+//              aspectRatio: 1 / 1,  
+//              onChange:   showCoords,
+//              onSelect:   showCoords,
+//              onRelease:  clearCoords,
+//                bgFade: true,
+//                bgOpacity: .3,
+//                setSelect: [ 60, 70, 350, 300 ]
+//            },function(){
+//              jcrop_api = this;
+//            });
+
+
+        //PageMessageError
+                        
+            $('#cheeseburger .dropdown-menu').css('width', ($('#cheeseburger').width() - 60) + 'px');
+                
+                 $('.datepicker').datepicker();
+//            $(document).on('focus','.datepicker',function(){
+//                  $('.datepicker-days').parent().hide();
+//                  $(this).datepicker();
+//             });
+//
+//            $('.datepicker').on('changeDate', function(ev){
+//                $(this).datepicker('hide');
+//            });
+            
+//            $('.datepicker').on('blur', function(ev){
+//                        setTimeout(function() {
+//                               $('.datepicker-days').parent().hide();
+//                           }, 100);
+//            });
+
+        
+            
+
+            $("#message_center_preview_wrap").click(function(e){
+                e.stopPropagation();
+            });
+
+            $(document).click(function(){
+                $("#message_center_preview").hide();
+                $("#usermenudrop").hide();
+                $("#quickmenudrop").hide();
+                $("#myGroups").hide();
+            });
+
+            $("#message_center_icon").click(function(e){
+                $("#message_center_preview").show();
+                $(".dropdown-menu").hide();
+                $("#myGroups").hide();
+                HeaderLoadMessageLists();
+                 e.stopPropagation();
+            }); 
+            
+            $(".quickmenu").click(function(e){
+                $("#message_center_preview").hide();
+                $("#quickmenudrop").show();
+                $("#usermenudrop").hide();
+            });
+            
+            $(".usermenu").click(function(e){
+                $("#message_center_preview").hide();
+                $("#usermenudrop").show();
+                $("#quickmenudrop").hide();
+                $("#myGroups").hide();
+            });
+            
+        $(document).on("keypress", ":input:not(textarea):not([type=password])", function(event) {
+            if (event.keyCode == 13) {
+                event.preventDefault();
+            }
+        });
+            
+ });
+        
+
+
+
+  
+    
+    
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-21785172-13', 'auto');
+  ga('send', 'pageview');
+
+     
+
+	function toggleaccordians(openme){
+
+		$(openme).parents('.accordian-main').children(".accordian-cat").each(function() {
+			if (openme !== $(this)){
+				$(this).children('.accordian-body').slideUp();
+			}
+		});
+		$(openme).parents('.accordian-header').siblings('.accordian-body').slideDown();
+	} 
+        
+        
+        
+        
+function ResetSearch(searchfield){
+    $('#' + searchfield).css("color","black");
+    $('#' + searchfield).css("font-weight","normal");
+    $('#' + searchfield).val('');
+    $('#' + searchfield).focus();
+}
+
+function ResetPhoto(){
+    $('#modal_confirm').show();
+    confirm("Are you sure that you want to delete this photo?",function(inresult){
+        if(inresult){
+            var ID = $('#UserID2').val();
+            datapacket = {ID:ID,TODO:'ResetUserPhoto'};
+            $('#modal_loading_screen').show();
+            $.ajax({
+                  type:"POST",
+                  url:SiteURL,
+                  data:datapacket,
+                  dataType: "json",
+                  crossDomain: true,
+                  success: function(reply) {
+                    if(reply.error === true){
+                        //Show the error message
+                      $('#error_message').html(reply.error_message);
+                      $('#error_message').css('display','block');
+                      $('#modal_loading_screen').hide();
+                    }else{
+                        //do stuff here
+                        $('#modal_loading_screen').hide();
+                        ShowPageMessage(reply.message);
+                        SubOrgSrch($('#suborgsearchbox').val(),this);
+                        AutoUpload('photo');
+                    }
+                },
+                error: function(message,obj,error) {
+                    $('#error_message').html('There was an error communicating with the server. ' + message.statusText);
+                    $('#error_message').css('display','block');
+                    $('#modal_loading_screen').hide();
+                }
+            });
+        } else{
+            return false;
+          }
+    });
+}
+        
+        
+        
+function fliprodriguez(){
+    var userfirst = $("#UserFirstName").val();
+    var userlast = $("#UserLastName").val();
+    
+    $("#UserLastName").val(userfirst);
+    $("#UserFirstName").val(userlast);
+    
+}        
+        
+function printTable(tableID){
+   var tabletoprint=document.getElementById(tableID);
+   divToPrint = tabletoprint.cloneNode(true);
+   divToPrint.setAttribute("border", "1");
+   divToPrint.setAttribute("cellspacing", "0");
+   divToPrint.setAttribute("cellpadding", "10");
+   newWin= window.open("");
+   newWin.document.write(divToPrint.outerHTML);
+   newWin.print();
+   newWin.close();
+}
+
+function CloseEmergency(){
+    //set cookie
+    localStorage.setItem("emergencyclosed","True");
+    $('#emergency_message').hide();
+}      
+        
+         </script>
+            <style type="text/css">
+.jcrop-holder div
+{
+    -webkit-border-radius: 100% !important;
+    -moz-border-radius: 100% !important;
+    border-radius: 100% !important;
+}
+
+
+#warning_message .message_icon{
+  position: absolute;
+  top: 10px;
+  left: 21px;
+  color: inherit;
+  font-size:28px !important;
+}
+
+#warning_message{
+    z-index: 1000 !important;
+    position: absolute;
+    left:30%;
+    display: none;
+    border-radius: 10px;
+    margin:0 auto !important;
+    width: 40%;
+    opacity:0.95 !important; 
+    filter:alpha(opacity=95) !important;
+    min-height: 50px;
+}
+
+#warning_message a{
+    color:white;
+}
+
+#PageMessageWarning{ 
+    padding:5px;
+    margin-top:10px;
+    margin-left:40px;
+    margin-right:40px;
+}
+
+#warning_message .close{
+    padding:5px;
+    margin-right:10px;
+}
+</style> 
+  </head>
+    <body >
+       
+<div id="primarypannel" class=" panel-info" >
+            <div id="user_menu_bar" class="" style="background-color: #0f9d58;position: fixed; margin-top: -50px; z-index: 100; border-bottom: 1px solid #FFFFFF !important;">
+            <div id="signoutUser" style="float:right; margin-top:-5px; margin-right:5px" onclick="logout();"><button  type="button" class="btn btn-danger btn-raised btn-lg " >Sign out</button></div>
+        </div>
+     
+
+    <div class="panel-heading main_header" id="main_sub_header" style="background-color: #dff0d8;; margin-top: 50px" >
+        <div id="info_message" class="alert alert-dismissable alert-success">
+        <button type="button" class="close" data-dismiss="alert" onclick="$('#info_message').slideUp(2000);">×</button>
+        <i class="mdi-action-info message_icon" ></i>
+        <div id="PageMessage" ></div>
+        </div>
+
+        <div id="error_message" class="alert alert-dismissable alert-danger">
+        <button type="button" class="close" data-dismiss="alert" onclick="$('#error_message').slideUp(2000);">×</button>
+        <i class="mdi-alert-error message_icon" ></i>
+        <div id="PageMessageError" ></div>
+        </div>
+        
+        <div id="error_message_groups" class="alert alert-dismissable alert-danger">
+        <button type="button" class="close" onclick="$('#error_message_groups').slideUp(2000);">×</button>
+        <i class="mdi-alert-error message_icon" ></i>
+        <div id="PageMessageErrorGroups" ></div>
+        </div>
+        
+        <div id="warning_message" class="warning warning-dismissable alert-warning">
+        <button type="button" class="close" data-dismiss="alert" onclick="$('#warning_message').slideUp(2000);">×</button>
+        <i class="mdi-alert-error message_icon" ></i>
+        <div id="PageMessageWarning" >Having display problems? <a href="javascript:void(0);" onclick="alert('It could be related to our upgrade last night. Fortunately, there is an easy fix!<br/><br/>Microsoft Windows: Hold down the Control Key and hit F5<br/>MacOS: Hold Shift and Cmd and hit R<br/><br/>If you are still having trouble, please email <a href=\'mailto:support@pbisrewards.com\' >support@pbisrewards.com</a> and we’ll respond right away.<br/>')"> Click Here </a></div>
+        </div>
+                <a href="index.php" border="0"><img style="position: fixed;z-index: 101;" src="https://student.pbisrewards.com/images/PBIS-Horizontal.png" alt="PBIS Rewards Logo. Clicking this will refresh the page." title="Home" id="header_logo"/></a>
+                <h3 id="sub-heading" alt="School Name" style="margin-top:0px; align-content: center; font-weight: bold !important"><p style="visibility:hidden;">School Name</p></h3>
+    </div>
+   <div id="progressbar" class="progress progress-striped active">
+       <div class="progress-bar" style="width: 100%;height:10px;"></div>
+   </div>
+
+        <div id="content" >
+
+            
+            
+            
+<div id="notification_center">
+    <div id="notification_center_title"></div>
+    <div id="notification_center_body">
+        
+    </div>
+
+    <div id="notification_center_footer">
+        
+    </div>
+</div>            
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+
+<script type="text/javascript">
+    window.onbeforeunload = function() { return "Your work will be lost."; };
+                    
+    $(document).ready(function() {
+        $('#sub-heading').html("Red Oak Middle School");
+        $('#sub-heading').css('color', '#0f9d58');
+        
+    $('#logdate').on('changeDate', function(ev){
+        $(this).datepicker('hide');
+    });    
+
+        BackToUser();
+    });
+            
+function AttachListener(){
+    var idleWait = 300;
+    var TimeVal = 0;
+    var TimeInterval = setInterval(CallTimerInc, 1000);
+    function CallTimerInc() {
+//        console.log(TimeVal);
+        TimeVal++;
+        if (TimeVal > (idleWait)) {
+            logout();                                           //UNCOMMENT FOR TIMEOUT 
+        }
+    }
+    $(document).bind('mousemove click mouseup mousedown keydown keypress keyup submit change mouseenter scroll resize dblclick touchstart touchmove touchend touchenter touchleave touchcancel', function (event) {
+        TimeVal = 0;
+
+    });
+
+
+}           
+            
+            
+            
+ function BackToUser(){
+     $('#signoutUser').show();
+     var datapacket = {
+                    TODO: 'StudentBalanceCheck',
+                    SchoolCode: "1029",                                                
+                    ScannedData: "13410"                                         
+                };
+//                alert(window.localStorage.StudentCode);                                                                          //Show Raw mobile code of logged in user when going to profile
+//                $('#progressbar').show();
+                $('#scan_loading').show();
+                $.ajax({
+                      type:"POST",
+                      url:SiteURL,
+                      data:datapacket,
+                      dataType: "json",
+                      crossDomain: true,
+                      success: function(reply) {
+                          
+                        //Get Json obj and save information
+                        //Is the information correct in the DB?
+                        if(reply.error === true){
+                            //Show the error message
+                          $('#scan_message').css('color','#a94442');  
+                          $('#scan_message').html(reply.error_message);
+//                          $('#progressbar').hide();
+                          $('#scan_loading').hide();
+                        }else{
+                            
+                            if(reply.student._Grade == '0'){
+                                var grade = 'K';
+                            }else if(reply.student._Grade == '-2'){
+                                var grade = 'N/A';
+                            }else{
+                                var grade = reply.student._Grade;
+                            }
+                            
+                          //remove the scan button
+                          var balance = (reply.student._CurrentBalance == '') ? '0' : reply.student._CurrentBalance;
+                          $('#schoolStoreName').html("School Store ("+reply.StoreName+")");
+                          //show the student information
+                          $('#student_first_name').html(reply.student._FirstName);
+                          $('#student_last_name').html(reply.student._LastName);
+                          $('#student_grade').html(" ("+grade+")");
+                          $("#student_picture").attr("src",reply.photo);
+                          $('#points_current').html(balance);
+                          window.localStorage.setItem("balance", balance);
+                          $('#points_period').html(reply.Points_GP);
+                          $('#points_year').html(reply.Points_Year);
+                          $('#points_today').html(reply.Points_Today);
+                          
+                          
+                        var items_html = '';
+                        $.each(reply.categories, function (i, cats) {
+                            items_html += '<table class="table table-striped  table-hover well" style="margin-bottom: 10px;">';
+                            items_html += '<tr class="success" ><th colspan="5" style="text-align: left !important;"><i class="mdi-action-shopping-cart" style="font-size:18px;vertical-align:middle" /> ' + cats.CatName + '<span onclick="ShowHideTableRows(this);" class="mdi-hardware-keyboard-arrow-up" style="float:right;font-size:22px;" ></span></th></tr>';
+                            items_html += '<tr><td style="text-align:left"><b>Photo</b></td><td style="text-align:left"><b>Item Name</b></td><td style="text-align: right"><b>Stock</b></td><td style="text-align: right"><b>Price</b></td><td style="text-align: right"><b>Progress</b></td></tr>';
+                            if (cats.CatItemsCount > 0){
+                                $.each(cats.CatItems, function (ind, item) {
+                                   var icon = (parseInt(reply.student._CurrentBalance) >= parseInt(item._Price)) ? 'mdi-maps-beenhere' : 'mdi-maps-directions-bike';
+                                   var iconColor = (parseInt(reply.student._CurrentBalance) >= parseInt(item._Price)) ? 'success' : 'danger';
+                                   var stock = (item._OutOfStock == '1') ? '<img alt="out of stock" class="not_visible" src="images/outofstock.png" style="height: 25px;">' : item._Inventory;
+                                   if(item._Photo != ''){
+                                        var itemPic = '<img id="' + item._ID + '" alt="' + item._Description + '" src="'+ reply.itemPhotoPath + "/" + item._Photo + '" style="height: 38px;" onclick="showImageModal(this);">';
+                                        var logoPad = 'padding-top: 12px';
+                                    }
+                                    else{
+                                        itemPic = '';
+                                        var logoPad = 'padding-top: 12px';
+                                    }
+                                   items_html += '<tr ><td>'+ itemPic + '</td><td class="store_item_name" style="text-align:left; width: 42%;">' + item._Name + '</td><td class="store_item_stock" style="text-align:right;">' + stock + '</td><td class="store_item_price" style="text-align:right;">' + item._Price + '</td><td style="text-align:right;width:50px;' + logoPad + '!important"><i class="btn-' + iconColor + '  studenticonbutton popout ' + icon + ' circle-sm-stu"></i></td> </tr>';
+                       
+                                });
+                            }
+                            else{
+                                items_html += '<tr ><td class="store_item_name" style="text-align:left;word-break: break-word;" colspan="5" >No Items</td> </tr>';
+                            }
+                            
+                            items_html += '</table>';                       
+                        });
+                          $('#store_items').html(items_html);
+              
+                        var saved_html = '';
+                        saved_html += '<table class="table table-striped  table-hover well" style="margin-bottom: 10px;">';
+                        saved_html += '<tr class="success" ><th colspan="2" style="text-align: left !important;"><i class="mdi-action-stars" style="font-size:18px; vertical-align:middle" /> Saved Purchases<span onclick="ShowHideTableRows(this);" class="mdi-hardware-keyboard-arrow-up" style="float:right;font-size:22px;" ></span></th></tr>';
+                        saved_html += '<tr><td style="text-align:left !important"><b>Item Name</b></td><td style="text-align: center !important"><b>Price</b></td></tr>';
+                        if (reply.saved_array_count > 0){
+                            $.each(reply.saved_array, function (i, sitem) {
+                                //var icon = (parseInt(reply.student._CurrentBalance) >= parseInt(item.item_cost)) ? 'mdi-maps-beenhere' : 'mdi-maps-directions-bike';
+                                saved_html += '<tr ><td class="store_item_name" style="text-align:left !important;">' + sitem.item_name + '</td><td class="store_item_price"  style="text-align:center !important;">' + sitem.item_cost + '</td></tr>';
+                            });
+                        }
+                        else{
+                            saved_html += '<tr ><td class="store_item_name" style="text-align:left !impoortant;" colspan="2">No Items</td></tr>';
+                        }
+                        
+                        saved_html += '</table>';
+                          $('#saved_purchases').html(saved_html);
+                        
+                        
+                        
+                        var purchases_html = '';
+                        purchases_html += '<table class="table table-striped  table-hover well" style="margin-bottom: 10px;">';
+                        purchases_html += '<tr class="success" ><th colspan="5" style="text-align: left !important;"><i class="mdi-action-stars" style="font-size:18px; vertical-align:middle" /> Purchase History<span onclick="ShowHideTableRows(this);" class="mdi-hardware-keyboard-arrow-up" style="float:right;font-size:22px;" ></span></th></tr>';
+                        purchases_html += '<tr><td style="text-align:left"><b>Photo</b></td><td style="text-align:left"><b>Item Name</b></td><td style="text-align: right"><b>Price</b></td><td style="text-align: right"><b>Store</b></td><td style="text-align: right"><b>Date Purchased</b></td></tr>';
+                        if(reply.purchases_count !== 0){
+                            $.each(reply.purchases, function (i, purch) {
+
+                                   if(purch.Photo != ''){
+                                        var itemPic = '<img id="' + purch.ItemID + '" alt="' + purch.ItemDesc + '" src="'+ reply.itemPhotoPath + "/" + purch.Photo + '" style="height: 38px;" onclick="showImageModal(this);">';
+                                        var logoPad = 'padding-top: 18px';
+                                    }
+                                    else{
+                                        itemPic = '';
+                                        var logoPad = 'padding-top: 12px';
+                                    }
+                                    if(purch.ItemName != ''){
+                                        purchases_html += '<tr ><td>'+ itemPic + '</td><td class="store_item_name" style="text-align:left;word-break: break-word; width: 42%">' + purch.ItemName + '</td><td class="store_item_stock" style="text-align:right;">' + purch.Points + '</td><td class="store_item_price" style="text-align:right;">' + purch.Store + '</td><td style="text-align:right;width:50px;">' + purch.Date + '</td> </tr>';
+                                    }
+                            });
+                        }
+                        else{
+                            purchases_html += '<tr ><td class="store_item_name" style="text-align:left;" colspan="5" >No Items Purchased</td> </tr>';
+                        }
+
+                        purchases_html += '</table>';
+                        $('#purchases').html(purchases_html);  
+                          
+                          
+                          
+    
+                        if(reply.expType != 1){
+                            var expPoints_html = '';
+                            expPoints_html += '<table class="table table-striped  table-hover well" style="margin-bottom: 10px;">';
+                            expPoints_html += '<tr class="success" ><th colspan="2" style="text-align: left !important" ><i class="mdi-action-stars" style="font-size:18px; vertical-align:middle" /> Points Per Expectation - Year<span onclick="ShowHideTableRows(this);" class="mdi-hardware-keyboard-arrow-up" style="float:right;font-size:22px;" ></span></th></tr>';
+                            expPoints_html += '<tr><td style="text-align:left !important"><b>Expectation Name</b></td><td style="text-align: center !important"><b>Points</b></td></tr>';
+                            for(i=0; i<reply.expCount; i++){
+                                expPoints_html += '<tr ><td class="store_item_name" style="text-align:left !important;">' + reply.exp[i]._Description  + '</td><td class="store_item_price" style="text-align:center !important;">' + reply.pointsPerExp[i] + '</td></tr>';
+                            }
+                            expPoints_html += '</table>';
+                            expPoints_html += '<table class="table table-striped  table-hover well" style="margin-bottom: 10px;">';
+                            expPoints_html += '<tr class="success" ><th colspan="2" style="text-align: left !important" ><i class="mdi-action-stars" style="font-size:18px; vertical-align:middle" /> Points Per Expectation - Grading Period<span onclick="ShowHideTableRows(this);" class="mdi-hardware-keyboard-arrow-up" style="float:right;font-size:22px;" ></span></th></tr>';
+                            expPoints_html += '<tr><td style="text-align:left !important"><b>Expectation Name</b></td><td style="text-align: center !important"><b>Points</b></td></tr>';
+                            for(i=0; i<reply.expCount; i++){
+                                expPoints_html += '<tr ><td class="store_item_name" style="text-align:left !important;">' + reply.exp[i]._Description  + '</td><td class="store_item_price" style="text-align:center !important;">' + reply.pointsPerExpGP[i] + '</td></tr>';
+                            }
+                            expPoints_html += '</table>';
+                            $('#exp_totals').html(expPoints_html);
+                        }              
+
+                          var events_html = '';
+                            events_html += '<table class="table table-striped  table-hover well" style="margin-bottom: 10px;">';
+                            events_html += '<tr class="success" ><th colspan="4" style="text-align: left !important;"><i class="mdi-notification-event-note" style="font-size:18px;vertical-align:middle" /> Upcoming Events<span onclick="ShowHideTableRows(this);" class="mdi-hardware-keyboard-arrow-up" style="float:right;font-size:22px;" ></span></th></tr>';
+                            events_html += '<tr><td style="text-align:left !important"><b>Event Name</b></td><td style="text-align: center !important"><b>Price</b></td><td style="text-align: center !important"><b>Date</b></td><td style="text-align: right !important"><b>Progress</b></td></tr>';
+                          if (reply.events_count > 0){
+                             
+                            $.each(reply.events, function (i, event) {
+                               var event_icon = 'mdi-maps-directions-bike';
+                               var event_color = 'danger';
+                               if (event._EventType == 'deduct'){
+                                   if (parseInt(reply.student._CurrentBalance) >= parseInt(event._Points)){
+                                       event_icon = 'mdi-maps-beenhere';
+                                       event_color = 'success';
+                                   }
+                               }else if(event._EventType == 'earn_gp'){
+                                   if (parseInt(reply.Points_GP) >= parseInt(event._Points)){
+                                       event_icon = 'mdi-maps-beenhere';
+                                       event_color = 'success';
+                                   }
+                               }else if(event._EventType == 'earn_year'){
+                                   if (parseInt(reply.Points_Year) >= parseInt(event._Points)){
+                                       event_icon = 'mdi-maps-beenhere';
+                                       event_color = 'success';
+                                   }
+                               } 
+
+                              events_html += '<tr ><td class="store_item_name" style="text-align:left !important;">' + event._Name + '</td><td class="store_item_price" style="text-align:center !important;">' + event._Points + '</td><td style="text-align: center !important">' + event._EventDate + '</td><td style="text-align:right !important;padding-top: 12px !important; padding-right: 23px !important;"><i class="btn-' + event_color + ' studenticonbutton popout ' + event_icon + ' circle-sm-stu"></i></td> </tr>';
+
+                             });
+                           }
+                           else{
+                              events_html += '<tr ><td class="store_item_name" style="text-align:left !important;" colspan="4">No Events</td> </tr>';
+                           }
+                           
+                          $('#upcoming_events').html(events_html);
+                          
+                        var regevents_html = '';
+                        regevents_html += '<table class="table table-striped  table-hover well" style="margin-bottom: 10px;">';
+                        regevents_html += '<tr class="success" ><th colspan="3" style="text-align: left !important;" ><i class="mdi-notification-event-available" style="font-size:18px;vertical-align:middle" /> Registered Events<span onclick="ShowHideTableRows(this);" class="mdi-hardware-keyboard-arrow-up" style="float:right;font-size:22px;" ></span></th></tr>';
+                        regevents_html += '<tr><td style="text-align:left !important"><b>Event Name</b></td><td style="text-align: center !important"><b>Date</b></td></tr>';
+                        if (reply.registered_events_count > 0){
+                            $.each(reply.registered_events, function (i, regevt) {
+                                regevents_html += '<tr ><td class="store_item_name" style="text-align:left !important;">' + regevt.event_name + '</td><td class="store_item_price" colspan="2" style="text-align:center !important;width:100px;">' + regevt.event_date + '</td></tr>';
+                            });
+                        }
+                        else{
+                            regevents_html += '<tr ><td class="store_item_name" style="text-align:left !important;" colspan="4">No Events</td></tr>';
+                        }
+                        regevents_html += '</table>';
+                          $('#registered_events').html(regevents_html);
+                          
+                          
+                          showScreen('page_scanresults','page');
+                          HideAll();
+                          AttachListener();
+//                          $('#progressbar').hide();
+                          $('#scan_loading').hide();
+                        }
+                         $('#scanbutton').prop('disabled', false);
+                    },
+                    error: function(message,obj,error) {
+                        $('#scanbutton').prop('disabled', false);
+                        $('#error_message').html('Student does not exist in this school');
+                        showScreen('page_error','page');
+                    }
+                });
+ }
+ 
+ 
+
+function ExpandAll(){
+    $('#store_items').show();
+    $('#teacherSearch').show();
+    $('#upcoming_events').show();
+    $('#registered_events').show();
+    $('#saved_purchases').show();
+    $('#purchases').show();
+    $('#exp_totals').show();
+    
+    $('#scan_screen table').each(function(){ 
+       var myspan = $(this).find('span:first');
+       HideAllTableRows(myspan);
+    });
+    
+    $('#allbutton').hide()
+    $('#closebutton').show()
+    $('#allbuttonstaff').hide()
+    $('#closebuttonstaff').show()
+}
+
+function HideAll(){
+    $('#scan_screen table').each(function(){ 
+       var myspan = $(this).find('span:first');
+       HideAllTableRows(myspan);
+    });
+    $('#store_items').hide();
+    $('#teacherSearch').hide();
+    $('#upcoming_events').hide();
+    $('#registered_events').hide();
+    $('#saved_purchases').hide();
+    $('#purchases').hide();
+    $('#exp_totals').hide();
+    $('#allbutton').show()
+    $('#closebutton').hide()
+    $('#allbuttonstaff').show()
+    $('#closebuttonstaff').hide()
+}
+
+function ShowAllTableRows(thiscell){
+    var mytable = $(thiscell).closest('table');
+    $(mytable).find("tr:gt(0)").each(function(){
+        if(!$(this).is(':visible')){
+            $(this).show();
+            $(thiscell).removeClass( "mdi-hardware-keyboard-arrow-down" ).addClass("mdi-hardware-keyboard-arrow-up");
+        }
+    });
+}
+
+function HideAllTableRows(thiscell){
+    var mytable = $(thiscell).closest('table');
+    $(mytable).find("tr:gt(0)").each(function(){
+        if($(this).is(':visible')){
+            $(this).hide();
+            $(thiscell).removeClass( "mdi-hardware-keyboard-arrow-up" ).addClass("mdi-hardware-keyboard-arrow-down");
+        }
+    });
+}
+
+function ShowHideTableRows(thiscell){
+    var mytable = $(thiscell).closest('table');
+    $(mytable).find("tr:gt(0)").each(function(){
+        if($(this).is(':visible')){
+            $(this).hide();
+            $(thiscell).removeClass( "mdi-hardware-keyboard-arrow-up" ).addClass("mdi-hardware-keyboard-arrow-down");
+        }
+        else{
+            $(this).show();
+            $(thiscell).removeClass( "mdi-hardware-keyboard-arrow-down" ).addClass("mdi-hardware-keyboard-arrow-up");
+        }
+        
+    });
+}
+
+ function logout(){
+     
+     localStorage.clear();
+     window.location = "login.php";
+ }
+ 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////    
+        
+function SearchForStaff(target) {
+
+    if ($('#' + target).val().length < 1){
+        HideStaffSearch(0);
+//        $('.school_ajax_list').empty();
+//        $('.student_search_results').show(); 
+    }
+
+    if ($('#' + target).val().length < 3){
+        $('.staff_ajax_list').hide();
+        return;
+    }
+
+    var filter = [];
+    var sort ="user.LastName,user.FirstName";
+    filter[0] = '-1';
+    groupid = '';
+    schoolID = "7a548d74339038227791fda336cdfdad";
+    
+    datapacket =  {TODO: "SubOrgSrch", SearchValue:$('#' + target).val(), IncludeStudents: 0, 
+        IncludeTeachers: 1, IncludeInactive: 0, SubOrg: schoolID,Group: groupid,SortOrder:sort,Filter:filter};
+    $.ajax({
+        type:"POST",
+        url:SiteURL,
+        data:datapacket,
+        dataType: "json",
+        crossDomain: true,
+        success: function(reply) {
+                if(reply.error === true){
+                    //Show the error message
+                  $('#error_message').html(reply.error_message);
+                  $('#error_message').css('display','block');
+                }else{
+                        $('.staff_ajax_list').show();
+                        $('#' + target + '_list').html("");
+                        if (reply.teacherlength > 0){
+                            $('#' + target).css('color', 'black');
+                            var bgflag = 0;
+                            for (i = 0; i < reply.teacherlength; i++) {
+                                
+                                console.log(reply.teachers[i]["Name"] + reply.teachers[i]["TeacherUser"]._ID);
+                                
+                                var bgc = "#eeeeee;";
+                                if (bgflag == 0){
+                                    bgc = "#dff0d8;";
+                                    bgflag = 1;
+                                }
+                                else{
+                                    bgc = "#ffffff; border: 1px solid #dff0d8;";
+                                    bgflag = 0;
+                                }
+
+                                link = "<div style='background-color: " + bgc + ";cursor: pointer !important; padding: 8px;' onclick='SelectStaff(\"" + reply.teachers[i]["TeacherUser"]._ID + "\",\"" + reply.teachers[i]["Name"] + "\");showTeacherStore();return false;'><span style='font-weight:bold;font-size:20px;    display: inline-table;vertical-align: top !important;margin-top: 5px;'> " + htmlEntities(reply.teachers[i]["Name"]) 
+                                        + "<br/></span></div><div class='clear'>&nbsp;</div>";
+                                
+                                
+                                
+                                $('#' + target + '_list').append(link);
+                            }
+                        }
+                        else{
+//                            $('.school_ajax_list').hide();
+                            $('#' + target).css('color', 'red');
+                            $('#' + target + '_list').html("No results");
+                        }
+                }
+
+            },
+            error: function(message,obj,error) {
+                $('#error_message').html('There was an error communicating with the server. ' + message.statusText);
+                $('#error_message').css('display','block');
+            }
+        });  
+}
+
+
+
+    function SelectStaff(ID, Name){
+        //console.log("SchoolID: " + schoolID);
+        $('.staff_ajax_list').hide();
+        $('#StaffName').val(Name);
+        $('#staffID').val(ID);
+        $('#enterStaff').show();
+        $('#StaffName').css('color', 'green');
+        $('#StaffName').css('font-weight', 'bold');
+        window.localStorage.setItem("TeacherName", Name);
+    }
+    
+//        function HideStaffSearch(pause) {
+//    //return;
+//        if (pause) {
+//            setTimeout(function() { 
+//                $('.staff_ajax_list').empty();
+//                $('.group_ajax_input').css('color', 'black');
+//                $('#group_add_student').val('');
+//               // $('#teacher_name').val('');
+////               $('.staff_ajax_list').hide();
+//            }, 500);
+//        } else {
+//            $('.staff_ajax_list').empty();
+//            $('.group_ajax_input').css('color', 'black');
+//        }
+//    }
+//    
+    
+    
+    
+    
+    function showTeacherStore(){
+             var datapacket = {
+                    TODO: 'FindTeachersCats',
+                    StaffID: $('#staffID').val(),                                           
+                    SubOrg: "7a548d74339038227791fda336cdfdad",
+                    StuCode: localStorage.getItem("StudentCode"),
+                };
+                $.ajax({
+                      type:"POST",
+                      url:SiteURL,
+                      data:datapacket,
+                      dataType: "json",
+                      crossDomain: true,
+                      success: function(reply) {
+                        //Get Json obj and save information
+                        //Is the information correct in the DB?
+                        if(reply.error === true){
+                            //Show the error message
+                          $('#scan_message').css('color','#a94442');  
+                          $('#scan_message').html(reply.error_message);
+//                          $('#progressbar').hide();
+                        }else{
+                          //remove the scan button
+                          var title = '';
+                        if(reply.staff._LastName.endsWith('s')){
+                            var title = "' Store";
+                        }
+                        else{
+                            var title = "'s Store";
+                        }
+                        if(reply.categories_count == 0){
+                            $('#staff_store_items').html("<div style='font-size: 18px;font-weight: bold; margin-top:20px'>This teacher does not have a store.</div>");
+                            $('#staff_first_name').html(reply.staff._FirstName);
+                            $('#staff_last_name').html(reply.staff._LastName);
+                            $('#staff_title').html(title);
+                            $("#staff_picture").attr("src",reply.photo);
+                            $('#staff_items_key').hide();                                 
+                            $('#student_pointsStaff').hide();
+                            $('#teacherStoreHeader').hide()
+                            showScreen('page_staffscanresults','page');
+                            HideAll();
+                            return;
+                        }
+                          //show the student information
+                          $('#staff_first_name').html(reply.staff._FirstName);
+                          $('#staff_last_name').html(reply.staff._LastName);
+                          $('#teacherStoreHeader').html(reply.staff._FirstName + " " + reply.staff._LastName + title);
+                          $("#staff_picture").attr("src",reply.photo);
+                          $('#student_pointsStaff').show();
+                          var bal = window.localStorage.balance;                                   
+                          $('#balance').html(bal)
+                        var items_html = '';
+                        $.each(reply.categories, function (i, cats) {
+                            items_html += '<table class="table table-striped  table-hover well" style="margin-bottom: 10px;">';
+                            items_html += '<tr class="success" ><th colspan="5" style="text-align: left !important;><i class="mdi-action-shopping-cart" style="font-size:18px;vertical-align:middle" /> ' + cats.CatName + '<span onclick="ShowHideTableRows(this);" class="mdi-hardware-keyboard-arrow-up" style="float:right;font-size:22px;" ></span></th></tr>';
+                            items_html += '<tr><td style="text-align:left"><b>Photo</b></td><td style="text-align:left"><b>Item Name</b></td><td style="text-align: right"><b>Stock</b></td><td style="text-align: right"><b>Price</b></td><td style="text-align: right"><b>Progress</b></td></tr>';
+                            if (cats.CatItemsCount > 0){
+                                $.each(cats.CatItems, function (ind, item) {
+//                                    alert(bal + parseInt(item._Price));
+                                   var icon = (parseInt(bal) >= parseInt(item._Price)) ? 'mdi-maps-beenhere' : 'mdi-maps-directions-bike';
+                                   var iconColor = (parseInt(bal) >= parseInt(item._Price)) ? 'success' : 'danger';
+                                   var stock = (item._OutOfStock == '1') ? '<img alt="out of stock" class="not_visible" src="images/outofstock.png" style="height: 25px;">' : item._Inventory;
+                                   if(item._Photo != ''){
+                                        var itemPic = '<img id="' + item._ID + '" alt="' + item._Description + '" src="'+ reply.itemPhotoPath + "/" + item._Photo + '" style="height: 38px;" onclick="showImageModalStaff(this);">';
+                                        var logoPad = 'padding-top: 18px';
+                                    }
+                                    else{
+                                        itemPic = '';
+                                        var logoPad = 'padding-top: 12px';
+                                    }
+                                   items_html += '<tr ><td>'+ itemPic + '</td><td class="store_item_name" style="text-align:left;word-break: break-word; width: 42%">' + item._Name + '</td><td class="store_item_stock" style="text-align:right;">' + stock + '</td><td class="store_item_price" style="text-align:right;">' + item._Price + '</td><td style="text-align:right;width:50px;' + logoPad + '"><i class="btn-' + iconColor + '  studenticonbutton popout ' + icon + ' circle-sm-stu"></i></td> </tr>';
+                                });
+                            }
+                            else{
+                                items_html += '<tr ><td class="store_item_name" style="text-align:left;" colspan="5" >No Items</td> </tr>';
+                            }
+                            
+                            items_html += '</table>';
+                        });
+                          $('#staff_store_items').html(items_html);
+                          $('#teacherStoreHeader').show()
+                          $('#staff_items_key').show();
+                          showScreen('page_staffscanresults','page');
+                          HideAll();
+                        }
+                         $('#scanbutton').prop('disabled', false);
+                    },
+                    error: function(message,obj,error) {
+                        $('#scanbutton').prop('disabled', false);
+                        $('#error_message').html('Something went wrong!');
+                        showScreen('page_error','page');
+                    }
+                }); 
+            $('#StaffName').val('');
+            $('#enterStaff').hide();
+    }
+    
+function showImageModal(image){
+   //get the modal
+    var modal = document.getElementById('myModal');
+
+    // Get the image and insert it inside the modal - use its "alt" text as a caption
+    var img = document.getElementById(image.id);
+    var modalImg = document.getElementById("img01");
+    var captionText = document.getElementById("caption");
+    modal.style.display = "block";
+    modalImg.src = img.src;
+    captionText.innerHTML = img.alt;
+}
+
+function showImageModalStaff(image){
+   //get the modal
+    var modal = document.getElementById('myModalStaff');
+
+    // Get the image and insert it inside the modal - use its "alt" text as a caption
+    var img = document.getElementById(image.id);
+    var modalImg = document.getElementById("img02");
+    var itemDesc = document.getElementById("itemDescStaff");
+    modal.style.display = "block";
+    modalImg.src = img.src;
+    itemDesc.innerHTML = img.alt;
+}
+    
+function toggle(target) {
+    var x = document.getElementById(target);
+    if (x.style.display === 'none') {
+        x.style.display = 'block';
+    } else {
+        x.style.display = 'none';
+    }
+    
+    $('#scan_screen table').each(function(){ 
+       var myspan = $(this).find('span:first');
+       HideAllTableRows(myspan);
+    });
+}    
+
+function LogSearch(codeindex,sortDirection,sortColumn){     
+//    var startdate = $("#StartDateMonth").val() + "/" + $("#StartDateDay").val() + "/" + $("#StartDateYear").val();
+//    var enddate = startdate;
+//    
+    var startdate = $('#logdate').val();
+    var enddate = startdate;
+    
+    
+    var dateVal = 'range';
+    var ethnicVal = '';
+    var optionval = 'student';
+    var includeDetails = '1';
+    var studentID = '885b7bc3f54ec06df97ceaa64e549182';
+    datapacket = {SubOrg:'7a548d74339038227791fda336cdfdad',report_type:optionval,StartDate:startdate,EndDate:enddate,Code:studentID,Data:studentID,Sort:optionval,Ethnic:ethnicVal,Details:includeDetails,DateVal:dateVal,sortDirection:sortDirection,sortColumn:sortColumn,isStudent:'1', TODO: 'AwardedPoints'};
+    $('#modal_loading_screen').show();
+        $.ajax({
+              type:"POST",
+              url:SiteURL,
+              data:datapacket,
+              dataType: "json",
+              crossDomain: true,
+              success: function(reply) {
+                if(reply.error === true){
+                    //Show the error message
+                  $('#error_message').html(reply.error_message);
+                  $('#error_message').css('display','block');
+                  $('#searchLoader').css('display','none');
+                  
+                }else{
+                    //Enable the CSV export button
+                        $("#exportCSV").removeAttr("disabled");
+                        if (codeindex == 0){
+                            $("#report_results tbody").find("tr").remove();
+                        }
+                        //If there are students in the array, show them. Else, display "No Results Found"
+                            if (reply.hasLogs == '1'){
+                                for (i = 0; i < reply.logs_length; i++) {
+                                    if(reply.usesExp === '1'){
+                                        if (reply.logs[i].exp == null){
+                                            var exp = '-';
+                                        }else{
+                                            var exp = reply.logs[i].exp;
+                                        }
+                                        $('#report_results tbody').append("<tr><td class='modalTableBody'> " + reply.logs[i].log_point_date + "</td>" 
+                                        + "<td class='modalTableBody'> " + reply.logs[i].point + "</td>"
+                                        + "<td class='modalTableBody'> " + exp + "</td>"
+                                        + "<td class='modalTableBody'>" + reply.logs[i].issuerFirstName  + " " + reply.logs[i].staff  + "</td></tr>");
+                                    }else{
+                                        $('#report_results tbody').append("<tr><td class='modalTableBody'> " + reply.logs[i].log_point_date + "</td>" 
+                                        + "<td class='modalTableBody'> " + reply.logs[i].point + "</td>"
+                                        + "<td class='modalTableBody'>" + reply.logs[i].issuerFirstName  + " " + reply.logs[i].staff  + "</td></tr>");
+                                    }
+                                }
+                            }
+                            else{
+                                $('#report_results tbody').append("<tr><td colspan='7' class='modalTableBody'> No Results Found</td></tr>");
+                            }
+                            $('#myPointsModal').show()
+                        }
+                    $('#progressbar').hide();
+                    $('#modal_loading_screen').hide();
+            },
+            error: function(message,obj,error) {
+                $('#error_message').html('There was an error communicating with the server. ' +  message.statusText);
+                $('#error_message').css('display','block');
+                $('#searchLoader').css('display','none');
+
+            }
+        });   
+}
+   
+//Log Search by month   
+   
+function LogSearchMonth(month){
+        datapacket = {SubOrg:'7a548d74339038227791fda336cdfdad', Student: '885b7bc3f54ec06df97ceaa64e549182',Month: month, TODO: 'StudentPointDetails'};
+        $.ajax({
+            type:"POST",
+            url:SiteURL,
+            data:datapacket,
+            dataType: "json",
+            crossDomain: true,
+            success: function(reply) {
+                if(reply.error === true){
+                    //Show the error message
+                    $('#error_message').html(reply.error_message);
+                    $('#error_message').css('display','block');
+                }else{
+                    $('#report_results tbody').html('');
+                    if (reply.logscount > 0){
+                        for (i = 0; i < reply.logscount; i++) {
+                            if(reply.usesExp === '1'){
+
+                                if (reply.logs[i].exp._Description == null){
+                                    var exp = '-';
+                                }else{
+                                    var exp = reply.logs[i].exp._Description;
+                                }
+
+                                $('#report_results tbody').append("<tr><td class='modalTableBody'> " + reply.logs[i].log_point_date + "</td>" 
+                                + "<td class='modalTableBody'> " + reply.logs[i].point + "</td>"
+                                + "<td class='modalTableBody'> " + exp + "</td>"
+                                + "<td class='modalTableBody'>" + reply.logs[i].issuerFirstName  + " " + reply.logs[i].staff  + "</td></tr>");
+                            }else{
+                                $('#report_results tbody').append("<tr><td class='modalTableBody'> " + reply.logs[i].log_point_date + "</td>" 
+                                + "<td class='modalTableBody'> " + reply.logs[i].point + "</td>"
+                                + "<td class='modalTableBody'>" + reply.logs[i].issuerFirstName  + " " + reply.logs[i].staff  + "</td></tr>");
+                            }
+                        }
+                    }else{
+                        $('#report_results tbody').append("<tr><td colspan='7' class='modalTableBody'> No Results Found</td></tr>");
+                    }
+                    $('#myPointsModal').show()
+                }
+            },
+            error: function(message,obj,error) {
+            $('#error_message').html('There was an error communicating with the server. ' +  message.statusText);
+            $('#error_message').css('display','block');
+            $('#searchLoader').css('display','none');
+
+            }
+        });
+}
+</script>
+
+<body>
+    <div id="content">
+            
+        
+        <!-- This is the setup page -->
+            <div id="primarypannel" class="panel panel-success ">
+
+                <div id="progressbar" class="progress progress-striped active " style="display:none">
+                    <div class="progress-bar progress-bar-success" style="width: 100%"></div>
+                </div>
+                
+                <div id="page_scanresults" class="panel-body ltpage" style="">
+                    <fieldset >
+                        <div class="form-group" id="scan_screen" style="margin: auto; width: 60%;">
+                            <div class="stuProfileHeader">
+                                <div class="studentheader-left" id="student_name" style="border-radius: 10px;text-align: center;font-size: 40px;font-weight: 500;margin-left: auto; margin-right: auto;display: inline-block;padding-left: 15px;padding-right: 15px;padding-bottom: 10px;color:white"><span id="student_first_name">FirstName</span> <span id="student_last_name">LastName</span><span id="student_grade">Grade</span></div>    
+                                <input type="hidden" id="userLoggedIn" value="">
+                                <div id="student_header" style="width: 100%;margin-left: auto;margin-right: auto;text-align: center">
+                                    <img class="circle_pic" src="images/teacher.png" id="student_picture" alt="Student Photo" style="box-shadow: 0px 0px 50px #dff0d8 !important; ">
+                                    <!--<div id="student_points" style="width: 90%; margin-left: auto; margin-right: auto; color:white">-->
+                                    <div id="student_points" style="width: 258px; margin-left: auto; margin-right: auto; color:white">
+                                        <h3>Balance: <b><span id="points_current" class="points_display">0</span></b></h3>
+                                        <h4>Today: <b><span id="points_today" class="points_display">0</span></b></h4>    
+                                        <h4>Period: <b><span id="points_period" class="points_display">0</span></b></h4>
+                                        <h4>Year: <b><span id="points_year" class="points_display">0</span></b></h4>
+<!--                                        <div class="dropdown">
+                                            <button class="btn btn-info dropdown-toggle sleekButton" type="button" data-toggle="dropdown" >My points by month
+                                            <span class="caret"></span></button>
+                                            <ul class="dropdown-menu" style="margin-top: -10px; width: 215px; margin-left: -6px;">
+                                                <li><a onclick="LogSearchMonth('1')">January</a></li>
+                                                <li><a onclick="LogSearchMonth('2')">February</a></li>
+                                                <li><a onclick="LogSearchMonth('3')">March</a></li>
+                                                <li><a onclick="LogSearchMonth('4')">April</a></li>
+                                                <li><a onclick="LogSearchMonth('5')">May</a></li>
+                                                <li><a onclick="LogSearchMonth('6')">June</a></li>
+                                                <li><a onclick="LogSearchMonth('7')">July</a></li>
+                                                <li><a onclick="LogSearchMonth('8')">August</a></li>
+                                                <li><a onclick="LogSearchMonth('9')">September</a></li>
+                                                <li><a onclick="LogSearchMonth('10')">October</a></li>
+                                                <li><a onclick="LogSearchMonth('11')">November</a></li>
+                                                <li><a onclick="LogSearchMonth('12')">December</a></li>
+                                            </ul>
+                                        </div>-->
+<br>
+<div style="width:300px;"><label for="" class="col-lg-3 right control-label" style="color: white">Date: </label><input id="logdate" title="Date" name="logdate" maxlength="12" length="10" class="form-control left col-lg-2 datepicker" style="z-index: 0 !important; color: white" value="03/02/2018"/></div>
+<!--
+                                    <div style="margin-left: auto;margin-right: auto;width: 83%;margin-top: 40px">
+                                        <div class="styled-select" style="width:60px;float:left;">
+                                            <label>
+                                                <select name="StartDateMonth" class="form-control_new startmonths" id="StartDateMonth" style="width:75px;">
+                                                    <option value="" >MM</option><option value='01'  >01 </option><option value='02'  >02 </option><option value='03' selected='selected' >03 </option><option value='04'  >04 </option><option value='05'  >05 </option><option value='06'  >06 </option><option value='07'  >07 </option><option value='08'  >08 </option><option value='09'  >09 </option><option value='10'  >10 </option><option value='11'  >11 </option><option value='12'  >12 </option>                                                </select>
+                                            </label>
+                                        </div>
+                                        <span style="width:10px;float:left;font-size:26px;">/</span>
+                                        <div class="styled-select" style="width:50px;float:left;">
+                                            <label>
+                                                <select name="StartDateDay" class="form-control_new startdays" id="StartDateDay" style="width:65px;">
+                                                    <option value="" >DD</option><option value='01'  >01 </option><option value='02' selected='selected' >02 </option><option value='03'  >03 </option><option value='04'  >04 </option><option value='05'  >05 </option><option value='06'  >06 </option><option value='07'  >07 </option><option value='08'  >08 </option><option value='09'  >09 </option><option value='10'  >10 </option><option value='11'  >11 </option><option value='12'  >12 </option><option value='13'  >13 </option><option value='14'  >14 </option><option value='15'  >15 </option><option value='16'  >16 </option><option value='17'  >17 </option><option value='18'  >18 </option><option value='19'  >19 </option><option value='20'  >20 </option><option value='21'  >21 </option><option value='22'  >22 </option><option value='23'  >23 </option><option value='24'  >24 </option><option value='25'  >25 </option><option value='26'  >26 </option><option value='27'  >27 </option><option value='28'  >28 </option><option value='29'  >29 </option><option value='30'  >30 </option><option value='31'  >31 </option>                                                </select>
+                                            </label>
+                                        </div>
+                                        <span style="width:10px;float:left;font-size:26px;">/</span>
+                                        <div class="styled-select" style="width:70px;float:left;">
+                                            <label>
+                                            <select name="StartDateYear" class="form-control_new startyears" id="StartDateYear" style="width:85px;">
+                                                <option value="" >YYYY</option><option value='2018' selected='selected' >2018</option><option value='2019'  >2019</option>                                            </select>
+                                            </label>
+                                        </div>
+                                    </div>-->
+                            <button  type="button" class="btn-info sleekButton" id="DailyPointButton"  onclick="LogSearch(0);" >View My Point Details</button>
+                                </div>
+                            </div>
+                                <div class='clear'>&nbsp;</div>
+                            </div>
+                            <div id="items_key" style="MARGIN-TOP: 25PX; font-size: 19px; text-align: right"><i class="mdi-maps-beenhere"></i> Can Afford <br/><i class="mdi-maps-directions-bike"></i> Working Toward<br/>
+                            <button  type="button" class="btn-success sleekButton" id="allbutton"  onclick="ExpandAll();" >Expand All</button>
+                            <button  type="button" class="btn-success sleekButton" id="closebutton"  onclick="HideAll();" style="display:none" >Close All</button>
+                            </div>
+                        
+                            <div class='clear'>&nbsp;</div>
+                                                        <div class="header2 btn-success" onclick="toggle('store_items')"><span id="schoolStoreName"></span></div>                            
+                            <div id="store_items" style="width: 95%;margin: auto;"></div>
+                            <div  class="header2 btn-success" onclick="showScreen('page_teachersearch','page');">Teacher Stores</div>
+                            <div id="teacherSearch" style="bottom: 5px;text-align:center; bottom: 40px;margin-bottom: 20px;"></div> 
+                            <div class="header2 btn-success" onclick="toggle('saved_purchases'); toggle('purchases');">Purchases</div>
+                            <div id="saved_purchases" style="width: 95%;margin: auto;"></div>
+                            <div id="purchases" style="width: 95%;margin: auto;"></div>
+                            <div class="header2 btn-success" onclick="toggle('upcoming_events'); toggle('registered_events')">Events</div>
+                            <div id="upcoming_events" style="width: 95%;margin: auto;"></div>
+                            <div id="registered_events" style="width: 95%;margin: auto;"></div>
+                        </div>
+                    </fieldset>
+                    
+                    <!-- The Modal -->
+                    <div id="myModal" class="modal2" >
+                        <span class="close2" onclick="$('#myModal').hide()">&times;</span>
+                      <img class="modal-content2" id="img01" style="">
+                      <div id="caption" class="caption"></div>
+                    </div>
+                    
+                    <div id="myPointsModal" class="modal2">
+                        <span class="close2" onclick="$('#myPointsModal').hide()">&times;</span>
+                        <table class="" id="report_results" style="width: 75%; margin-left: auto; margin-right: auto; color:white; margin-bottom: 150px">
+                            <thead >
+                                <tr class="" style="width: 75%">
+                                    <th class="modalTableHeader" id="date" style="width:30%;">Date/Time</th>
+                                    <th class="modalTableHeader" style="width:10%;" id="point">Points </th>
+                                                                        <th class="modalTableHeader" style="width: 30%;" id="staff" >Teacher</th>  
+                                </tr>
+                            </thead>
+                            <tbody id="tbody"></tbody>
+                        </table> 
+                    </div>
+                </div>
+                
+                <div id="page_teachersearch" class="panel-body ltpage">
+                    <a href="javascript:void(0)" title="Home" onclick="showScreen('page_scanresults','page'); $('#teacherStoreHeader').hide(); HideAll();" class="btn btn-success btn-fab btn-fab-sm btn-raised fa fa-home withripple" style="float:left;margin-top:-35px;margin-left: 5px"><div class="ripple-wrapper"></div></a>
+                    <form class="form-horizontal" id="form-signin" style="width: 60%;margin: auto;">
+                        <fieldset>
+                            <legend><b>Teacher Store Search</b></legend>
+                            <div class="form-group col-lg-12">
+                                <input type="text" class="form-control " autocomplete="off" id="StaffName" placeholder="Please enter a teacher's name..." onkeyup="SearchForStaff('StaffName'); $('#enterStaff').hide();" onblur="HideStaffSearch(1);" >
+                                <div class='clear'>&nbsp;</div><br/>
+                                <center><div id="StaffName_list" class="staff_ajax_list" style="width: auto; padding-left:5px;padding-right:10px;top: 38px !important;left: 8px !important; display: none"></div></center>
+                                <input type="hidden" id="staffID" name="staffID" value=""/>
+                                 
+                                 
+                                <a onclick="showTeacherStore();" style="display:none" href="javascript:void(0)" id="enterStaff" class="btn btn-success btn-raised btn-lg " >Select Teacher</a>
+                                <div id='staff_list'> 
+                                <div class='clear'>&nbsp;</div><br/>
+                                <div class='clear'>&nbsp;</div><br/>
+                                </div>
+                                <div id="success_message"></div>
+                                <div id="scan_loading"></div> 
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+                
+                <div id="page_staffscanresults" class="panel-body ltpage">
+                    <a href="javascript:void(0)" title="Home" onclick="showScreen('page_scanresults','page'); $('#teacherStoreHeader').hide(); HideAll();" class="btn btn-success btn-fab btn-fab-sm btn-raised fa fa-home withripple" style="float:left;margin-top:-35px; margin-left: 5px"><div class="ripple-wrapper"></div></a>
+                    <fieldset >
+                        <div class="form-group" id="scan_screen" style="margin:auto; width: 60%; min-width: 365px;">
+                            <div class="stuProfileHeader">
+                            <p style="text-align: center; margin-bottom: 0px !important;"><img class="staff_circle_pic" src="images/teacher.png" id="staff_picture" alt="Staff Photo" style="box-shadow: 2px 2px 35px #ffffff !important;"></p>
+                            <div class='clear'>&nbsp;</div>
+                            <div class="staffheader-left" id="staff_name" style="width:auto; text-align: center; font-size: 35px;margin-top: 25px;color: white"><b><span id="staff_first_name">FirstName</span> <span id="staff_last_name">LastName</span></b></div>
+                            <div class='clear'>&nbsp;</div>
+                            </div>
+                            <div id="staff_items_key" style="MARGIN-TOP: -65PX; font-size: 19px;text-align: right"><div style="margin-bottom: -45px;margin-top: 90px;"><i class="mdi-maps-beenhere"></i> Can Afford <br/><i class="mdi-maps-directions-bike"></i> Working Toward<br/>
+                                </div>
+                            <div id="student_pointsStaff" style="margin-top: 15px !important; text-align: left"><h3 style="font-size: 25px;margin-top: -50px !important;">My Balance: <b><span id="balance" class="points_display">0</span></b></h3></div>                            
+                            </div>
+                            <div class='clear'>&nbsp;</div>
+                            <div class="header2 btn-success" id="teacherStoreHeader"></div>
+                            <div id="staff_store_items" style="width: 95%; margin: auto"></div>
+                        </div>
+                    </fieldset>
+                    <!-- The Modal -->
+                    <div id="myModalStaff" class="modal2">
+                        <span class="close2" onclick="$('#myModalStaff').hide();">&times;</span>
+                      <img class="modal-content2" id="img02">
+                      <div id="itemDescStaff" class="caption"></div>
+                    </div>
+                </div>
+                
+                
+                    <div id="page_error" class="panel panel-danger ltpage">
+                       <div class="panel-heading">
+                           <h3 class="panel-title">Error</h3>
+                       </div>
+                       <div class="panel-body">
+           <div id="error_div" ><h2 id="error_message"></h2></div>
+           <div id="signoutError" style="bottom: 5px;width:95%;text-align:center; bottom: 40px;margin-left: 10px;"><button  type="button" class="btn btn-danger btn-raised btn-lg "   onclick="logout();">Back</button></div> 
+                       </div>
+                        
+                   </div>
+            </div>
+        
+        </div>
+<!--        
+        <script src="js/bootstrap/js/bootstrap.min.js"></script>
+        <script src="js/bootstrap/js/ripples.min.js"></script>
+        <script src="js/bootstrap/js/material.min.js"></script>
+        <script src="js/ltnowfunctions.js"></script>-->
+    </body>
+
+  <div id="loading_screen"><div class="loader loader_dark"  ></div></div>
+  
+  </div>
+        </div>
+
+  
+  
+<!--  <div id="loading_screen"><div class="loader loader_dark"  ></div></div>-->
+  
+<div id='modal_loading_screen' class="modal">
+    <div class="modal-dialog ">
+        <div class="" style=" margin-top: 50% !important;">
+            <div id="import_loading" ><img class="popout" alt="currently loading information" src="https://student.pbisrewards.com/images/loadingcircle.gif" /></div> 
+        </div>
+    </div>
+</div>
+  
+  
+  </div>
+        </div>
+        
+        
+<div id='modal_loading' class="modal" >
+    <div class="modal-dialog panel" style="width: 250px;">
+        <div class="modal-content" style="border-radius: 10% !important;">
+            <div class="modal-header modal_title_bg" style="border-top-left-radius: 10%;border-top-right-radius: 10%;">
+            <h3 class="modal-title" style="text-align: center;">Creating File</h3>
+        </div> <!-- .modal-header -->       
+            <div class="modal-body" style="padding: 0px !important;">
+                <div class="loader loader_dark" style="font-size: 6px;" ></div>
+             <div class="clear">&nbsp;</div>
+            </div>
+        </div>
+    </div>
+</div>
+        
+<div id='modal_alert' class="modal" style="z-index:5000 !important;">
+    <div class="modal-dialog panel" style="border-bottom-left-radius: 5%;border-bottom-right-radius: 5%">
+        <div class="modal-content" style="">
+            <div class="modal-header modal_title_bg" style="">
+            <h3 class="modal-title" id="message_title" style="text-align: center;">PBIS Rewards Message</h3>
+        </div> <!-- .modal-header -->       
+            <div class="modal-body" style="padding: 10px !important;">
+                <span class="" id="alert_message" ></span>
+             <div class="clear">&nbsp;</div>
+            </div>
+                <div class="modal-footer" style="padding: 10px;">
+                    <button type="button" class="btn btn-info btn-sm" id="cancelbutton" style="" onclick="$('#modal_alert').hide();">OK</button>
+                    <div class="clear">&nbsp;</div>
+                </div>
+        </div>
+    </div>
+</div>
+        
+<div id='modal_confirm' class="modal" style="z-index:6000 !important;">
+    <div class="modal-dialog panel" style="border-bottom-left-radius: 5%;border-bottom-right-radius: 5%;width:500px;">
+        <div class="modal-content" style="">
+            <div class="modal-header modal_title_bg" style="">
+            <h3 class="modal-title" id="message_title" style="text-align: center;">PBIS Rewards Message</h3>
+        </div> <!-- .modal-header -->       
+            <div class="modal-body" style="padding: 10px !important;">
+                <span class="" id="confirm_message" ></span>
+             <div class="clear">&nbsp;</div>
+            </div>
+                <div class="modal-footer" style="padding: 10px;">
+                    <a href="javascript:void(0);" class="btn btn-info btn-sm" id="confirmNo" style="float:left;" onclick="$('#modal_confirm').hide();">No</a>
+                    <a href="javascript:void(0);" class="btn btn-warning btn-sm" id="confirmYes" style="float:right;" >Yes</a>
+                    <div class="clear">&nbsp;</div>
+                </div>
+        </div>
+    </div>
+</div>  
+        
+        
+        <script src="https://student.pbisrewards.com/js/bootstrap/js/bootstrap.min.js"></script>
+        <script src="https://student.pbisrewards.com/js/bootstrap/js/ripples.min.js"></script>
+        <script src="https://student.pbisrewards.com/js/bootstrap/js/material.min.js"></script>
+        <script src="https://student.pbisrewards.com/js/jcrop/js/jquery.Jcrop.min.js"></script>
+        
+        <script src="https://student.pbisrewards.com/js/ltnowfunctions.js?1520023784"></script>
+
+    </body>
+</html>
+
